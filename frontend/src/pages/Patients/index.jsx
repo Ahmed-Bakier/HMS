@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../api/axios';
 
 const bloodColor = { 'A+':'bg-red-100 text-red-600','A-':'bg-red-100 text-red-600','B+':'bg-blue-100 text-blue-600','B-':'bg-blue-100 text-blue-600','AB+':'bg-purple-100 text-purple-600','AB-':'bg-purple-100 text-purple-600','O+':'bg-amber-100 text-amber-600','O-':'bg-amber-100 text-amber-600' };
 
 export default function Patients() {
+  const navigate                  = useNavigate();
   const { user }                  = useAuthStore();
   const canWrite                  = ['super_admin','admin','doctor','nurse'].includes(user?.role);
   const [patients, setPatients]   = useState([]);
@@ -48,7 +50,7 @@ export default function Patients() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search patients..."
             className="border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64" />
           {canWrite && (
-            <button onClick={() => setShowModal(true)}
+            <button onClick={e => { e.stopPropagation(); setShowModal(true); }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
               + Add Patient
             </button>
@@ -74,7 +76,9 @@ export default function Patients() {
             ) : filtered.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-12 text-slate-400">No patients found</td></tr>
             ) : filtered.map(p => (
-              <tr key={p.id} className="hover:bg-slate-50 transition">
+              <tr key={p.id}
+                onClick={() => navigate(`/patients/${p.id}`)}
+                className="hover:bg-slate-50 transition cursor-pointer">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-semibold text-sm">
@@ -104,8 +108,8 @@ export default function Patients() {
       </div>
 
       {showModal && canWrite && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Patient</h3>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
