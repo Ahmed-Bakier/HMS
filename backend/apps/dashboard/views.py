@@ -1,9 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, serializers
+from rest_framework.decorators import action
 from django.utils import timezone
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
+from .models import Notification
+
 
 class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -28,6 +32,7 @@ class DashboardStatsView(APIView):
             'pending_invoices':  Invoice.objects.filter(status='pending').count(),
         })
 
+
 class DashboardAdmissionsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -45,4 +50,30 @@ class DashboardAdmissionsView(APIView):
             .order_by('date')
         )
         date_map = {row['date']: row['count'] for row in data}
-        return Response([{'date': str(start + timedelta(days=i)), 'admissions': date_map.get(start + timedelta(days=i), 0)} for i in range(7)])
+        return Response([{'date': str(start + __import__('datetime').timedelta(days=i)), 'admissions': date_map.get(start + __import__('datetime').timedelta(days=i), 0)} for i in range(7)])
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Notification
+        fields = ['id','type','title','body','is_read','created_at']
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class   = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def read(self, request, pk=None):
+        notif = self.get_object()
+        notif.is_read = True
+        notif.save()
+        return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'], url_path='read-all')
+    def read_all(self, request):
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'status': 'all marked as read'})
