@@ -11,6 +11,7 @@ from apps.patients.views     import PatientViewSet
 from apps.appointments.views import AppointmentViewSet
 from apps.pharmacy.models    import InventoryViewSet
 from apps.billing.models     import InvoiceViewSet
+from apps.dashboard.views    import NotificationViewSet
 
 router = DefaultRouter()
 router.register('users',        UserViewSet,        basename='users')
@@ -20,6 +21,7 @@ router.register('patients',     PatientViewSet,     basename='patients')
 router.register('appointments', AppointmentViewSet, basename='appointments')
 router.register('inventory',    InventoryViewSet,   basename='inventory')
 router.register('invoices',     InvoiceViewSet,     basename='invoices')
+router.register('notifications', NotificationViewSet, basename='notifications')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
